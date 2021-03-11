@@ -4,7 +4,7 @@
 
 - STRIPE_SECRET -> Secret key of Stripe
 - JWT_SECRET -> Random generated string 
-- HOST -> Host Url (Ex. https://xxx.com)
+- HOST -> Host Url (Ex. https://abc.com)
 - PORT -> Port on which one want to run the server
 
 ### Steps to follow
