@@ -25,7 +25,7 @@
 - Work Done!!!
 
 
-## Authors
+## Author
 
 * **AppMixo** 
 
