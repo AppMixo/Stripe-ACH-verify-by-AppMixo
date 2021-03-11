@@ -63,7 +63,10 @@
         })
       ).json();
 
-      if (res.status === 200) alert("done");
+      if (res.status === 200)
+        alert(
+          "Stripe will two small deposites in your account soon to verify. We shall contact you. Thanks for trusting us."
+        );
       else alert(res.message);
     }
   </script>
