@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bank Details</title>
+
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+      integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+      integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+      integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+
+  <script>
+    function onLoad() {
+      document.getElementById("appmixo_img").src =
+        window.location.origin + "/appmixo.png";
+    }
+    async function handleSubmit() {
+      // get data
+      const data = {};
+
+      data.holderName = document.getElementById("holder_name").value;
+      data.accountNumber = document.getElementById("account_number").value;
+      data.routingNumber = document.getElementById("routing_number").value;
+
+      const selectedEle = document.querySelector(
+        'input[name="exampleRadios"]:checked'
+      );
+
+      if (!selectedEle) return alert("Please select the account type");
+      data.accountType = selectedEle.value;
+
+      data.token = window.location.href.split("/").pop();
+
+      // make api call
+      const res = await (
+        await fetch(`/api/verify`, {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        })
+      ).json();
+
+      if (res.status === 200) alert("done");
+      else alert(res.message);
+    }
+  </script>
+  <body style="background: #efefef" onload="onLoad()">
+    <a href="https://appmixo.com/" target="_blank"
+      ><img id="appmixo_img" style="max-width: 110px; margin: -5% 1% -15% 48%"
+    /></a>
+    <form style="padding: 10%">
+      <div class="form-group">
+        <label for="holder_name">Account Holder Name</label>
+        <input
+          type="text"
+          class="form-control"
+          id="holder_name"
+          aria-describedby="emailHelp"
+          placeholder="Ex. Nirav Pansuriya"
+        />
+        <small id="emailHelp" class="form-text text-muted"
+          >We'll not store these data on our server.</small
+        >
+      </div>
+      <div class="form-group">
+        <label for="account_number">Account Number</label>
+        <input
+          type="number"
+          class="form-control"
+          id="account_number"
+          aria-describedby="emailHelp"
+          placeholder="Ex. 3580393301"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="routing_number">Routing Number</label>
+        <input
+          type="number"
+          class="form-control"
+          id="routing_number"
+          aria-describedby="emailHelp"
+          placeholder="Ex. 11000000"
+        />
+      </div>
+
+      <div>
+        <label for="account_number">Account Type</label>
+      </div>
+
+      <div class="form-check">
+        <input
+          class="form-check-input"
+          type="radio"
+          name="exampleRadios"
+          id="individual"
+          value="individual"
+        />
+        <label class="form-check-label" for="exampleRadios1">
+          Individual
+        </label>
+      </div>
+      <div class="form-check">
+        <input
+          class="form-check-input"
+          type="radio"
+          name="exampleRadios"
+          id="company"
+          value="company"
+        />
+        <label class="form-check-label" for="exampleRadios2"> Company </label>
+      </div>
+
+      <br />
+
+      <button type="button" class="btn btn-primary" onclick="handleSubmit()">
+        Submit
+      </button>
+
+      <br />
+
+      <a href="https://stripe.com" target="_blank">
+        <img alt="stripe logo" src="/stripe.svg" style="max-width: 200px" />
+      </a>
+    </form>
+  </body>
+</html>
