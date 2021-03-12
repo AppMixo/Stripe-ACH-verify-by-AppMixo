@@ -18,6 +18,7 @@ router.get("/link", userApis.getLink);
  */
 
 router.post("/verify", userApis.verifyBank);
+router.post("/plaid", userApis.plaidVerify)
 //----------------------------------------------------------------------------------
 
 module.exports = router;

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Plaid</title>
+</head>
+
+<body>
+    <button id="link-button">Link Account</button>
+
+    <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+    <script type="text/javascript">
+        (async function () {
+            const configs = {
+                // Pass the link_token generated in step 2.
+                token: "<%token%>",
+                onLoad: function () {
+                    // The Link module finished loading.
+                },
+                onSuccess: async function (public_token, metadata) {
+                    // The onSuccess function is called when the user has
+                    // successfully authenticated and selected an account to
+                    // use.
+                    //
+                    // When called, you will send the public_token
+                    // and the selected account ID, metadata.accounts,
+                    // to your backend app server.
+                    //
+                    // sendDataToBackendServer({
+                    //   public_token: public_token,
+                    //   account_id: metadata.accounts[0].id
+                    // });
+                    switch (metadata.accounts.length) {
+                        case 0:
+                            // Select Account is disabled: https://dashboard.plaid.com/link/account-select
+                            break;
+                        case 1:
+
+
+                            const data = {
+                                publicToken: public_token,
+                                accountId: metadata.accounts[0].id
+                            }
+
+                            data.token = window.location.href.split("/").pop();
+
+                            const res = await (await fetch(`/api/plaid`, {
+                                method: "POST",
+                                headers: {
+                                    Accept: "application/json",
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify(data)
+                            })).json();
+
+                            if (res.status === 200) alert("done");
+                            else alert("There is some error")
+
+                            break;
+                        default:
+                        // Multiple Accounts is enabled: https://dashboard.plaid.com/link/account-select
+                    }
+                },
+                onExit: async function (err, metadata) {
+                    // The user exited the Link flow.
+                    if (err != null) {
+                        // The user encountered a Plaid API error
+                        // prior to exiting.
+                    }
+                    // metadata contains information about the institution
+                    // that the user selected and the most recent
+                    // API request IDs.
+                    // Storing this information can be helpful for support.
+                },
+            };
+
+            var linkHandler = Plaid.create(configs);
+
+            document.getElementById("link-button").onclick = function () {
+                linkHandler.open();
+            };
+        })();
+    </script>
+</body>
+
+</html>

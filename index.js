@@ -2,10 +2,29 @@ require("dotenv").config();
 const cors = require("cors");
 const chalk = require("chalk");
 const path = require("path");
+const jwt = require("jsonwebtoken");
+const fs = require("fs");
 
 //----------------------------------------------------------------------------------
 
 const userRouter = require("./server/routes/user");
+
+const Plaid = require("plaid");
+const Stripe = require("stripe");
+const clientUserId = 'Stripe test';
+
+
+const { PLAID_CLIENT_ID: plaidClientId, PLAID_SECRET: plaidSecret, PLAID_MODE: plaidMode } = process.env;
+
+if (!plaidClientId || !plaidMode || !plaidSecret) console.log(chalk.red.inverse("Plaid env not found"));
+
+if (!["production", "sandbox"].includes(plaidMode)) console.log(chalk.red.inverse("invalid plaid mode, please select 'sandbox' or 'production'"));
+
+var plaidClient = new Plaid.Client({
+  clientID: plaidClientId,
+  secret: plaidSecret,
+  env: Plaid.environments[plaidMode],
+});
 
 //----------------------------------------------------------------------------------
 
@@ -24,12 +43,63 @@ app.use(express.static(path.join(__dirname, "view")));
 
 app.use("/api", userRouter);
 
-app.use("/bank-details", (req, res) => {
-  res.sendFile(path.join(__dirname, "view", "bank_details.html"));
+
+app.use("/bank-details/:token", async (req, res) => {
+
+  /**
+   * get token
+   */
+
+
+  const { token } = req.params;
+
+  if (!token) {
+    return res.send(400).status({
+      status: 400,
+      message: "token not found"
+    })
+  }
+
+
+  // get jwt secret
+  const { JWT_SECRET: jwtSecret } = process.env;
+
+  // get userid from userToken
+  const { userId, type } = await jwt.verify(token, jwtSecret);
+
+  if (type === "plaid") {
+
+    const tokenRes = await plaidClient.createLinkToken({
+      user: {
+        client_user_id: clientUserId,
+      },
+      client_name: "My App",
+      products: ["auth"],
+      country_codes: ["US"],
+      language: "en"
+    })
+
+    const token = tokenRes.link_token;
+
+    const htmlPath = path.join(__dirname,"view", "plaid.html");
+    let html = fs.readFileSync(htmlPath, "utf-8").toString().replace("<%token%>", token);
+    res.setHeader("Content-Type", "text/html");
+    res.status(200);
+    return res.send(html);
+
+  }
+  else {
+    return res.sendFile(path.join(__dirname, "view", "bank_details.html"));
+  }
+
 });
 
+app.use("/bank-details", (req, res) => {
+  return res.status(400).send({ status: 400, message: "token not found" })
+})
+
 app.use("/*", (req, res) => {
-  res.sendFile(path.join(__dirname, "view", "index.html"));
+  return res.sendFile(path.join(__dirname, "view", "index.html"));
 });
 
 //----------------------------------------------------------------------------------

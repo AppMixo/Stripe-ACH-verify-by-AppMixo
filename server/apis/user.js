@@ -1,11 +1,16 @@
 const jwt = require("jsonwebtoken");
+const Plaid = require("plaid");
+const Stripe = require("stripe");
+
+
+//----------------------------------------------------------------------------------
 
 const getLink = async (req, res) => {
   try {
     // get userId
-    const { userId } = req.query;
+    const { userId, type } = req.query;
 
-    if (!userId) {
+    if (!userId || !type) {
       return res.status(400).send({
         status: 400,
         message: "user id not found",
@@ -46,7 +51,7 @@ const getLink = async (req, res) => {
     }
 
     // get jwt
-    const token = jwt.sign({ userId }, secret);
+    const token = jwt.sign({ userId, type }, secret);
 
     return res.status(200).send({
       status: 200,
@@ -148,6 +153,87 @@ const verifyBank = async (req, res) => {
   }
 };
 
+const plaidVerify = async (req, res) => {
+
+  try {
+
+    const { publicToken, accountId, token } = req.body;
+
+    if (!publicToken || !accountId || !token) {
+      return res.status(400).send({
+        status: 400,
+        message: "parameters not found"
+      })
+    }
+
+
+    const { PLAID_CLIENT_ID: plaidClientId, PLAID_SECRET: plaidSecret, PLAID_MODE: plaidMode } = process.env;
+
+    if (!plaidClientId || !plaidMode || !plaidSecret) console.log(chalk.red.inverse("Plaid env not found"));
+
+    if (!["production", "sandbox"].includes(plaidMode)) console.log(chalk.red.inverse("invalid plaid mode, please select 'sandbox' or 'production'"));
+
+    var plaidClient = new Plaid.Client({
+      clientID: plaidClientId,
+      secret: plaidSecret,
+      env: Plaid.environments[plaidMode],
+    });
+
+    const accessToken = (await plaidClient.exchangePublicToken(publicToken)).access_token;
+
+    if (!accessToken) {
+      return res.status(400).send({
+        status: 400,
+        message: "error in getting exchange public token"
+      })
+    }
+
+    const bankAccountToken = (await plaidClient.createStripeToken(accessToken, accountId)).stripe_bank_account_token;
+
+    if (!bankAccountToken) {
+      return res.status(400).send({
+        status: 400,
+        message: "error in getting bank account token"
+      })
+    }
+
+    const { STRIPE_SECRET: stripeSecret } = process.env;
+
+    if (!stripeSecret) {
+      console.log(chalk.red.inverse("stripe keys not found"));
+    }
+
+    // get jwt secret
+    const { JWT_SECRET: jwtSecret } = process.env;
+
+    // get userid from userToken
+    const { userId } = await jwt.verify(token, jwtSecret);
+
+    if (!userId) {
+      return res.status(400).send({
+        status: 400,
+        message: "There is some error in fetching userId"
+      })
+    }
+
+    const stripe = Stripe(stripeSecret);
+
+    await stripe.customers.update(userId, {
+      source: bankAccountToken,
+    });
+
+    return res.status(200).send({
+      status: 200
+    })
+  } catch (error) {
+    console.log("error in plaid verify api", error);
+    return res.status(500).send({
+      status: 500,
+      message: error.raw.message,
+    });
+  }
+}
+
 //----------------------------------------------------------------------------------
 
-module.exports = { getLink, verifyBank };
+module.exports = { getLink, verifyBank, plaidVerify };

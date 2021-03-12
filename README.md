@@ -6,6 +6,8 @@
 - JWT_SECRET -> Random generated string 
 - HOST -> Host Url (Ex. https://abc.com)
 - PORT -> Port on which one want to run the server
+- PLAID_MODE -> sandbox or production
+- PLAID_SECRET -> Secret key of plaid
 
 ### Steps to follow
 
