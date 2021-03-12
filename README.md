@@ -29,5 +29,5 @@
 
 ## Author
 
-* **AppMixo** 
+* **[AppMixo®	](https://appmixo.com)** 
 
