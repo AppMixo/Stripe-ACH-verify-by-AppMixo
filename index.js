@@ -16,9 +16,15 @@ const clientUserId = 'Stripe test';
 
 const { PLAID_CLIENT_ID: plaidClientId, PLAID_SECRET: plaidSecret, PLAID_MODE: plaidMode } = process.env;
 
-if (!plaidClientId || !plaidMode || !plaidSecret) console.log(chalk.red.inverse("Plaid env not found"));
+if (!plaidClientId || !plaidMode || !plaidSecret) {
+  console.log(chalk.red.inverse("Plaid env not found"));
+  process.exit(1);
+}
 
-if (!["production", "sandbox"].includes(plaidMode)) console.log(chalk.red.inverse("invalid plaid mode, please select 'sandbox' or 'production'"));
+if (!["production", "sandbox"].includes(plaidMode)) {
+  console.log(chalk.red.inverse("invalid plaid mode, please select 'sandbox' or 'production'"));
+  process.exit(1);
+}
 
 var plaidClient = new Plaid.Client({
   clientID: plaidClientId,
@@ -81,7 +87,7 @@ app.use("/bank-details/:token", async (req, res) => {
 
     const token = tokenRes.link_token;
 
-    const htmlPath = path.join(__dirname,"view", "plaid.html");
+    const htmlPath = path.join(__dirname, "view", "plaid.html");
     let html = fs.readFileSync(htmlPath, "utf-8").toString().replace("<%token%>", token);
     res.setHeader("Content-Type", "text/html");
     res.status(200);
