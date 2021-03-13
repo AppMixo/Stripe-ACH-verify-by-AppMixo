@@ -21,7 +21,7 @@ if (!plaidClientId || !plaidMode || !plaidSecret) {
   process.exit(1);
 }
 
-if (!["production", "sandbox"].includes(plaidMode)) {
+if (!["production", "sandbox", "development"].includes(plaidMode)) {
   console.log(chalk.red.inverse("invalid plaid mode, please select 'sandbox' or 'production'"));
   process.exit(1);
 }
